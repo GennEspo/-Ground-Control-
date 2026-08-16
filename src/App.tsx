@@ -2078,7 +2078,7 @@ export default function App() {
     }
   }, [bootStage])
 
-  return (
+return (
     <div className="flex h-screen overflow-hidden bg-black text-white">
       {/* ── BARRA LATERALE A MONTAGGIO PROGRESSIVO ── */}
       <aside className="relative z-10 flex min-w-[380px] w-[380px] flex-col overflow-y-auto bg-black p-6 font-sans">
@@ -2289,7 +2289,7 @@ export default function App() {
                   <div className="mb-1 text-[var(--gray-color)] font-sans">Deploy:</div>
                   <div className="text-[0.7rem] text-white font-sans">{inspector.deploy}</div>
                 </div>
-               {inspector.battery !== undefined && (
+                {inspector.battery !== undefined && (
                   <div className="mt-2 pt-2 border-t border-[#444]">
                     <SpecRow 
                       label="Batteria" 
@@ -2381,37 +2381,39 @@ export default function App() {
         </div>
 
         {/* ── 7. PANNELLO TELEMETRIA + PULSANTE AUDIO FINALE ── */}
-        <div className={`transition-all duration-500 flex flex-col gap-3 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
+        <div className={`transition-all duration-500 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
             [Telemetria]
           </div>
-          <div className="border border-[#333] bg-[var(--highlight)] p-3 font-mono text-[0.65rem] leading-[1.4] text-[#ccc]">
-            <div className="h-[150px] overflow-y-auto">
-              {log.map((line, i) => (
-                <div key={i}>&gt; {line}</div>
-              ))}
+          <div className="space-y-3">
+            <div className="border border-[#333] bg-[var(--highlight)] p-3 font-mono text-[0.65rem] leading-[1.4] text-[#ccc]">
+              <div className="h-[150px] overflow-y-auto">
+                {log.map((line, i) => (
+                  <div key={i}>&gt; {line}</div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Pulsante Sound appare alla fine della sidebar nel boot progressivo */}
-          <button
-            onClick={() => {
-              playClickSound()
-              setIsMuted(!isMuted)
-            }}
-            className="w-full border border-[#444] py-2 font-mono text-[0.65rem] uppercase text-[var(--gray-color)] hover:border-white hover:text-white transition-colors"
-          >
-            {isMuted ? 'Audio: OFF' : 'Audio: ON'}
-          </button>
+            {/* Pulsante Sound appare alla fine della sidebar nel boot progressivo */}
+            <button
+              onClick={() => {
+                playClickSound()
+                setIsMuted(!isMuted)
+              }}
+              className="w-full border border-[#444] py-2 font-mono text-[0.65rem] uppercase text-[var(--gray-color)] hover:border-white hover:text-white transition-colors"
+            >
+              {isMuted ? 'Audio: OFF' : 'Audio: ON'}
+            </button>
+          </div>
         </div>
 
-{/* ── 8. COLOPHON & CREDITI (CONFORME LINEE GUIDA SUPSI - PROGETTO) ── */}
+        {/* ── 8. COLOPHON & CREDITI (CONFORME LINEE GUIDA SUPSI - PROGETTO) ── */}
         <div className={`transition-all duration-500 mt-4 border-t border-dashed border-[#444] pt-3 font-mono text-[0.6rem] leading-relaxed text-[var(--gray-color)] space-y-1 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
           <div className="text-white font-bold tracking-wider">[GROUND CONTROL]</div>
           <div>Progetto di tesi di Bachelor in Comunicazione visiva</div>
           <div>SUPSI · Dipartimento ambiente costruzioni e design</div>
           <div className="text-white pt-1">
-            © 2026 [Nome Cognome]. Tutti i diritti riservati.
+            © 2026 Gennaro Esposito. Tutti i diritti riservati.
           </div>
         </div>
 
