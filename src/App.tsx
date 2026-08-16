@@ -2078,7 +2078,7 @@ export default function App() {
     }
   }, [bootStage])
 
-return (
+  return (
     <div className="flex h-screen overflow-hidden bg-black text-white">
       {/* ── BARRA LATERALE A MONTAGGIO PROGRESSIVO ── */}
       <aside className="relative z-10 flex min-w-[380px] w-[380px] flex-col overflow-y-auto bg-black p-6 font-sans">
@@ -2289,7 +2289,7 @@ return (
                   <div className="mb-1 text-[var(--gray-color)] font-sans">Deploy:</div>
                   <div className="text-[0.7rem] text-white font-sans">{inspector.deploy}</div>
                 </div>
-                {inspector.battery !== undefined && (
+               {inspector.battery !== undefined && (
                   <div className="mt-2 pt-2 border-t border-[#444]">
                     <SpecRow 
                       label="Batteria" 
@@ -2403,6 +2403,16 @@ return (
           >
             {isMuted ? 'Audio: OFF' : 'Audio: ON'}
           </button>
+        </div>
+
+{/* ── 8. COLOPHON & CREDITI (CONFORME LINEE GUIDA SUPSI - PROGETTO) ── */}
+        <div className={`transition-all duration-500 mt-4 border-t border-dashed border-[#444] pt-3 font-mono text-[0.6rem] leading-relaxed text-[var(--gray-color)] space-y-1 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+          <div className="text-white font-bold tracking-wider">[GROUND CONTROL]</div>
+          <div>Progetto di tesi di Bachelor in Comunicazione visiva</div>
+          <div>SUPSI · Dipartimento ambiente costruzioni e design</div>
+          <div className="text-white pt-1">
+            © 2026 [Nome Cognome]. Tutti i diritti riservati.
+          </div>
         </div>
 
         {/* ── LINEA VERTICALE DI SEPARAZIONE ── */}
