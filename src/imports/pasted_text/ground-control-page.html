@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ground Control — Costruzione Modulare</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --bg-color: #000000; --text-color: #FFFFFF; --border-color: #FFFFFF; --gray-color: #8a8a8a; --highlight: #222222; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        #sidebar { width: 380px; min-width: 380px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 24px; overflow-y: auto; z-index: 10; background-color: var(--bg-color); }
+        .header { margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+        .header h1 { font-size: 1.1rem; font-weight: 600; text-transform: uppercase; }
+        .header .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--gray-color); margin-top: 4px; }
+        
+        .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px dashed var(--gray-color); padding-bottom: 4px; }
+        
+        #inspector { border: 1px solid var(--border-color); padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; position: relative; min-height: 250px;}
+        .inspector-header { border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; }
+        .inspector-id { font-weight: 700; font-size: 0.9rem; }
+        
+        #agent-render-box { width: 100%; height: 120px; background-color: var(--highlight); margin-top: 12px; display: flex; align-items: center; justify-content: center; color: var(--gray-color); font-size: 0.65rem; border: 1px solid #333; cursor: pointer; }
+        
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .data-label { color: var(--gray-color); }
+        
+        #terminal { background-color: var(--highlight); border: 1px solid #333; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; height: 150px; overflow-y: auto; color: #ccc; line-height: 1.4; margin-top: auto; }
+        
+        #viewport { flex-grow: 1; position: relative; background-color: var(--bg-color); overflow: hidden; min-width: 0; min-height: 0; }
+        canvas { display: block; cursor: crosshair; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="header">
+            <h1>Ground Control</h1>
+            <div class="subtitle">Fase 18 // Profilazione Agenti e Personas</div>
+        </div>
+
+        <div class="section-title">Scheda Protagonista</div>
+        <div id="inspector">
+            <div style="color: var(--gray-color); text-align: center; margin-top: 50px;">> Seleziona un Agente sulla mappa per caricare la sua scheda vettoriale.</div>
+        </div>
+
+        <div class="section-title">Telemetria</div>
+        <div id="terminal">
+            > Inizializzazione Roster (3 Entità).<br>
+            > Modelli fisici 2D caricati.<br>
+            > Parametri Wayfinding attivati.<br>
+            > Clicca su un protagonista per accedere al suo Layer Visivo.<br>
+        </div>
+    </div>
+
+    <div id="viewport"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+    <script>
+        // ==========================================================
+        // GROUND CONTROL · SISTEMA — dati dal manuale (Fase B)
+        //   verify:true = da verificare · reads = quote Z lette dai sensori
+        //   cls A = governabile (coordinabile) · B = non governabile (solo leggibile)
+        // ==========================================================
+        const GC_ROSTER = [
+          { code:"A.01", name:"Tennant T7AMR",   cls:"A", gov:true,  task:"pulizia (ride-on scrubber)",
+            h:145, fp:[165,85], kg:492,  speed:0.75, verify:true,
+            sensors:"array 3D ambiente + LiDAR (BrainOS)", nav:"BrainOS · teach-and-repeat",
+            reads:["Z0"], deploy:"aeroporti / grandi superfici", src:"Tennant (verificato)" },
+          { code:"A.02", name:"Avidbots Neo 2",  cls:"A", gov:true,  task:"pulizia (scrubber autonomo)",
+            h:140, fp:[150,80], kg:688,  speed:1.35,
+            sensors:"14 sensori · LiDAR 360° + camere 3D 270°", nav:"SLAM",
+            reads:["Z0","Z1"], deploy:"aeroporti", src:"Avidbots 2023" },
+          { code:"A.03", name:"Ottobot 2.0",     cls:"A", gov:true,  task:"logistica / consegna",
+            h:100, fp:[70,70], kg:null,  speed:1.67,
+            sensors:"LiDAR 3D 360° (Ouster) + camere + ultrasuoni + cliff", nav:"SLAM · 4-wheel swerve",
+            reads:["Z0","Z1"], deploy:"aeroporti", src:"Ottonomy" },
+          { code:"A.04", name:"Unitree G1",      cls:"A", gov:true,  task:"manipolazione",
+            h:132, fp:[40,40], kg:35,    speed:2.0,
+            sensors:"Livox MID-360 LiDAR 3D + Intel RealSense D435", nav:"LiDAR SLAM + depth",
+            reads:["Z0","Z1","Z2"], deploy:"trial", src:"Unitree 2024" },
+          { code:"A.05", name:"Unitree H1",      cls:"A", gov:true,  task:"informazione / guida",
+            h:180, fp:[45,45], kg:47,    speed:null, verify:true,
+            sensors:"LiDAR 3D + depth", nav:"LiDAR SLAM + depth",
+            reads:["Z0","Z1","Z2"], deploy:"trial", src:"Unitree 2024" },
+          { code:"A.06", name:"Knightscope K5",  cls:"A", gov:true,  task:"sicurezza / pattuglia",
+            h:164, fp:[113,89], kg:190,  speed:1.33,
+            sensors:"4× camere 4K/HD + termica + 6× LiDAR + 13× sonar", nav:"pattuglia autonoma · SLAM",
+            reads:["Z0","Z1","Z2"], deploy:"spazi pubblici", src:"Knightscope" },
+          { code:"B.01", name:"WHILL autonomous", cls:"B", gov:false, task:"mobilità (sedia a rotelle)",
+            h:90, fp:[99,55], kg:null,   speed:1.2,
+            sensors:"LiDAR + camere + sensori 360° · stop automatico", nav:"autonoma / assistita",
+            reads:["Z0","Z1"], deploy:"aeroporti", src:"WHILL 2020" },
+          { code:"B.02", name:"Airwheel SR5",    cls:"B", gov:false, task:"logistica (valigia auto-segue)",
+            h:55, fp:[38,21], kg:4.5,    speed:1.1,
+            sensors:"UWB + ultrasuoni + IR + camera 160°", nav:"follow-me (UWB) + anti-ostacolo",
+            reads:["Z0"], deploy:"consumer", src:"Airwheel" },
+          { code:"B.03", name:"Glüxkind Ella",   cls:"B", gov:false, task:"mobilità (passeggino smart)",
+            h:100, fp:[90,60], kg:13.6,  speed:1.78,
+            sensors:"sensori 360° + camere perimetrali", nav:"guida assistita / freno automatico",
+            reads:["Z0","Z1"], deploy:"consumer", src:"Glüxkind" },
+          { code:"B.04", name:"Robot-guida quadrupede", cls:"B", gov:false, task:"assistenza (cane-guida)",
+            h:40, fp:[70,30], kg:15,     speed:null, verify:true,
+            sensors:"LiDAR 4D + camere", nav:"zampe · segue percorso + anti-ostacolo",
+            reads:["Z0"], deploy:"candidato: Unitree Go2", src:"—" }
+        ];
+
+        // Grammatica — 7 segni. ch: 1=attivo(■) · 0=non usato(□) · 0.5=opzionale
+        const GC_SIGNS = [
+          { code:"L.1", name:"corsia / direzione", cls:"LINE",  says:"una via · vai di qui",
+            ch:{L:1,R:1,Ri:0,F:0.5}, form:"chevron a larghezza costante, ripetuto lungo la corsia" },
+          { code:"L.2", name:"confine / soglia",   cls:"LINE",  says:"qui cambia zona · un limite",
+            ch:{L:1,R:0,Ri:1,F:0},   form:"banda-soglia continua (striscia scura + domes ADA)" },
+          { code:"P.1", name:"àncora di posizione",cls:"POINT", says:"coordinata nota (x,y,θ)",
+            ch:{L:0,R:0,Ri:0,F:1},   form:"tag fiduciale (tag36h11), invisibile all'occhio (NIR)" },
+          { code:"P.2", name:"nodo / incrocio",    cls:"POINT", says:"qui i percorsi si incontrano",
+            ch:{L:1,R:1,Ri:0,F:0},   form:"quadrato pieno + rombo bianco inscritto" },
+          { code:"P.3", name:"attesa / stop",      cls:"POINT", says:"fermati · cedi · attendi",
+            ch:{L:1,R:0,Ri:1,F:0},   form:"patch trasversale alla corsia (scura) + domes ADA" },
+          { code:"C.1", name:"zona (tipo)",        cls:"FIELD", says:"area di tipo X",
+            ch:{L:1,R:1,Ri:0,F:0},   form:"tono pieno (chiaro→scuro), non un'icona",
+            tone:{public:"#ededed",mixed:"#d2d2d2",operational:"#a8a8a8"} },
+          { code:"C.2", name:"cautela / pericolo", cls:"FIELD", says:"attenzione: rischio",
+            ch:{L:1,R:0,Ri:1,F:0},   form:"campo di domes + barra pesante sul lato pericoloso" }
+        ];
+
+        // Sintassi — le 4 regole
+        const GC_RULES = [
+          { code:"SX-01", name:"precedenza",         rule:"al nodo (P.2) il ramo entrante cede (P.3), il principale continua" },
+          { code:"SX-02", name:"ingresso in zona",   rule:"la soglia (L.2) segna l'entrata in una zona (C.1)" },
+          { code:"SX-03", name:"priorità del rischio", rule:"il pericolo (C.2) sovrascrive tutto" },
+          { code:"SX-04", name:"innesto di corsia",  rule:"le corsie che confluiscono" }
+        ];
+
+        // Costanti del sistema
+        const GC_CONSTANTS = {
+          zLevels: { Z0:"radente · pavimento", Z1:"manipolativa · ~metà", Z2:"semantica · occhio ~1,55 m" },
+          defaultRule: "in campo aperto la macchina cede all'uomo; si marca solo strozzature/incroci (mai un tappeto)",
+          classes: { A:"coordinabile", B:"solo leggibile" },
+          reading: { decodeAhead_m:3.0, readerHeight_m:[0.4,1.8], humanEye_m:1.55, vMax_ms:2.0, worstGrazing_deg:7.6 },
+          relief:  { domeH_mm:5, domeBase_mm:[23,36], domePitch_mm:[41,61] },
+          contrast_LRV: 30,
+          ink: "#111"
+        };
+        // Utility: GC_ROSTER.find(r => r.code === "A.06")  → scheda giocatore K5
+        //          GC_SIGNS  → disegno grammatica a pavimento · GC_RULES → comportamento agenti
+
+        let cam = { x: 0, y: 0, zoom: 1, targetX: 0, targetY: 0, targetZoom: 1, isZoomed: false, followingAgent: null };
+
+        let zones = [
+            { id: "MAIN HALL (CHECK-IN)", x: -1600, y: 0, w: 3200, h: 1200 },
+            { id: "HANGAR AMR (BASE)", x: -2400, y: 200, w: 800, h: 800 },
+            { id: "SERVIZI IGIENICI", x: 1600, y: 200, w: 800, h: 800 },
+            { id: "FILTRI SICUREZZA", x: -800, y: -800, w: 1600, h: 800 },
+            { id: "BAGGAGE CLAIM (ARRIVI)", x: 800, y: -800, w: 800, h: 800 },
+            { id: "FOOD COURT", x: -1600, y: -2250, w: 800, h: 1450 },
+            { id: "VIP LOUNGE", x: 800, y: -2250, w: 800, h: 1450 },
+            { id: "DUTY FREE PLAZA", x: -800, y: -1600, w: 1600, h: 800 },
+            { id: "CENTRAL HUB (SMISTAMENTO)", x: -800, y: -3200, w: 1600, h: 1600 },
+            { id: "MOLO OVEST (TRANSITO)", x: -2400, y: -2550, w: 1600, h: 300 }, 
+            { id: "MOLO EST (TRANSITO)", x: 800, y: -2550, w: 1600, h: 300 },     
+            { id: "MOLO NORD (TRANSITO)", x: -150, y: -4800, w: 300, h: 1600 },   
+            { id: "WAYSTATION NORD", x: 150, y: -4100, w: 200, h: 200 },
+            { id: "TERMINALE D'IMBARCO OVEST", x: -3600, y: -3150, w: 1200, h: 1200 }, 
+            { id: "TERMINALE D'IMBARCO EST", x: 2400, y: -3150, w: 1200, h: 1200 },    
+            { id: "TERMINALE D'IMBARCO NORD", x: -600, y: -6000, w: 1200, h: 1200 }    
+        ];
+
+        let mapMinX = 0, mapMaxX = 0, mapMinY = 0, mapMaxY = 0;
+        let mapWidth = 0, mapHeight = 0;
+        let mapCenterX = 0, mapCenterY = 0;
+        
+        let hoveredZone = null;
+
+        // I Nodi Vettoriali e Pedonali
+        let nodes = {
+            startAMR: {x: -2000, y: 900},
+            startHall1: {x: 600, y: 1000},
+            startHall2: {x: -600, y: 1000},
+            axis: {x: 0, y: 900},
+            sec: {x: 0, y: -400},
+            hub: {x: 0, y: -2400},
+            fidsBypass: {x: 350, y: -2800},
+            fidsBypassL: {x: -350, y: -2800},
+            moloN_Entry: {x: 80, y: -3200},
+            moloN_Exit: {x: 80, y: -4800},
+            moloW_Entry: {x: -800, y: -2400},
+            gateN: {x: 0, y: -5400},
+            gateW: {x: -3000, y: -2400}
+        };
+
+        // IL ROSTER DEI PROTAGONISTI
+        let agents = [
+            {
+                id: "AMR-01",
+                type: "Robot Operativo",
+                x: nodes.startAMR.x, y: nodes.startAMR.y, 
+                size: 35, speed: 6.5, 
+                color: '#00FFFF',
+                selected: false,
+                focus: "Lettura sensoriale a pavimento / RFID",
+                cognition: "Basso (Esecutivo puro)",
+                path: [ nodes.startAMR, nodes.axis, nodes.sec, nodes.hub, nodes.fidsBypass, nodes.moloN_Entry, nodes.moloN_Exit, nodes.gateN ],
+                pathIndex: 1, direction: 1
+            },
+            {
+                id: "PAX-PRO",
+                type: "Passeggero Frequente",
+                x: nodes.startHall1.x, y: nodes.startHall1.y, 
+                size: 28, speed: 5, 
+                color: '#FF00FF',
+                selected: false,
+                focus: "Macro-segnaletica sospesa (Visione a tunnel)",
+                cognition: "Basso (Procedura nota)",
+                path: [ nodes.startHall1, nodes.sec, nodes.hub, nodes.fidsBypassL, nodes.moloW_Entry, nodes.gateW ],
+                pathIndex: 1, direction: 1
+            },
+            {
+                id: "PAX-FAM",
+                type: "Passeggero Leisure (Gruppo)",
+                x: nodes.startHall2.x, y: nodes.startHall2.y, 
+                size: 45, speed: 2.5, 
+                color: '#FFFF00',
+                selected: false,
+                focus: "Micro-segnaletica di conferma / Panico spaziale",
+                cognition: "Alto (Disorientamento facile)",
+                path: [ nodes.startHall2, nodes.axis, nodes.sec, nodes.hub, nodes.gateN ],
+                pathIndex: 1, direction: 1
+            }
+        ];
+
+        function setup() {
+            let vp = document.getElementById('viewport');
+            let canvas = createCanvas(vp.clientWidth, vp.clientHeight);
+            canvas.parent('viewport');
+            calculateMapBounds();
+            let startZoom = getFitZoom();
+            cam.zoom = startZoom;
+            cam.targetZoom = startZoom;
+            cam.x = mapCenterX;
+            cam.y = mapCenterY;
+            cam.targetX = mapCenterX;
+            cam.targetY = mapCenterY;
+            window.addEventListener('resize', windowResized);
+        }
+
+        function calculateMapBounds() {
+            mapMinX = Math.min(...zones.map(z => z.x)); mapMaxX = Math.max(...zones.map(z => z.x + z.w));
+            mapMinY = Math.min(...zones.map(z => z.y)); mapMaxY = Math.max(...zones.map(z => z.y + z.h));
+            mapWidth = mapMaxX - mapMinX; mapHeight = mapMaxY - mapMinY;
+            mapCenterX = mapMinX + mapWidth / 2; mapCenterY = mapMinY + mapHeight / 2;
+        }
+
+        function getFitZoom() {
+            let vp = document.getElementById('viewport');
+            return min(vp.clientWidth / (mapWidth + 150), vp.clientHeight / (mapHeight + 150)); 
+        }
+
+        function updateAgents() {
+            for (let a of agents) {
+                let target = a.path[a.pathIndex];
+                let dx = target.x - a.x; let dy = target.y - a.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < a.speed) {
+                    a.x = target.x; a.y = target.y;
+                    a.pathIndex += a.direction;
+                    if (a.pathIndex >= a.path.length) { a.direction = -1; a.pathIndex = a.path.length - 2; } 
+                    else if (a.pathIndex < 0) { a.direction = 1; a.pathIndex = 1; }
+                } else {
+                    a.x += (dx / distance) * a.speed; a.y += (dy / distance) * a.speed;
+                }
+            }
+
+            // Aggiorna UI se c'è un agente selezionato
+            let selectedAgent = agents.find(a => a.selected);
+            if (selectedAgent) {
+                let ui = document.getElementById('inspector');
+                ui.innerHTML = `
+                    <div class="inspector-header">
+                        <div class="inspector-id" style="color: ${selectedAgent.color}; text-shadow: 0 0 8px ${selectedAgent.color}88;">
+                            ${selectedAgent.id} // ${selectedAgent.type}
+                        </div>
+                    </div>
+                    
+                    <div class="data-row"><span class="data-label">Coord:</span><span>X: ${Math.round(selectedAgent.x)} Y: ${Math.round(selectedAgent.y)}</span></div>
+                    <div class="data-row"><span class="data-label">Velocità:</span><span>${selectedAgent.speed} unit/tick</span></div>
+                    <div style="margin-top: 12px; border-top: 1px dotted #444; padding-top: 8px;">
+                        <div class="data-label" style="margin-bottom: 4px;">Filtro di Lettura Wayfinding:</div>
+                        <div style="font-size: 0.7rem; color: #fff;">${selectedAgent.focus}</div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <div class="data-label" style="margin-bottom: 4px;">Carico Cognitivo Spaziale:</div>
+                        <div style="font-size: 0.7rem; color: #fff;">${selectedAgent.cognition}</div>
+                    </div>
+                    
+                    <div id="agent-render-box" style="box-shadow: inset 0 0 20px ${selectedAgent.color}22;">
+                        [ MODELLO 3D IN SCANSIONE ]
+                    </div>
+                `;
+            } else {
+                document.getElementById('inspector').innerHTML = `<div style="color: var(--gray-color); text-align: center; margin-top: 50px;">> Seleziona un Agente sulla mappa per caricare la sua scheda vettoriale.</div>`;
+            }
+        }
+
+        function draw() {
+            background(0);
+            updateAgents();
+
+            if (cam.followingAgent) {
+                cam.targetX = cam.followingAgent.x;
+                cam.targetY = cam.followingAgent.y;
+            }
+
+            cam.x = lerp(cam.x, cam.targetX, 0.1);
+            cam.y = lerp(cam.y, cam.targetY, 0.1);
+            cam.zoom = lerp(cam.zoom, cam.targetZoom, 0.1);
+
+            let worldX = (mouseX - width / 2) / cam.zoom + cam.x;
+            let worldY = (mouseY - height / 2) / cam.zoom + cam.y;
+
+            push();
+            translate(width / 2, height / 2);
+            scale(cam.zoom);
+            translate(-cam.x, -cam.y);
+
+            drawGrid();
+            drawArchitecture();
+            
+            // Disegna il percorso solo per l'agente selezionato
+            let selectedAgent = agents.find(a => a.selected);
+            if (selectedAgent) { drawVectors(selectedAgent); }
+            
+            // Disegna tutti i modellini
+            for (let a of agents) { drawAgentModel(a); }
+
+            pop();
+
+            // Logica Cursore
+            let hoveringAgent = agents.find(a => dist(worldX, worldY, a.x, a.y) < a.size * 2);
+            if (hoveringAgent) cursor(HAND); 
+            else cursor(CROSS);
+        }
+
+        function drawGrid() {
+            strokeWeight(1 / cam.zoom);
+            for (let i = -7000; i <= 7000; i += 50) {
+                if (i % 200 === 0) stroke(45, 45, 45);
+                else stroke(15, 15, 15); 
+                line(i, -7000, i, 7000); line(-7000, i, 7000, i);
+            }
+        }
+
+        function drawArchitecture() {
+            for (let z of zones) {
+                push();
+                fill(0); stroke(255); strokeWeight(2 / cam.zoom); 
+                rect(z.x, z.y, z.w, z.h);
+                pop();
+            }
+
+            // Decorazioni minimali
+            push(); stroke(80); strokeWeight(1.5 / cam.zoom); noFill();
+            for(let i = 0; i < 4; i++) { rect(-1400 + (i * 180), 300, 60, 600, 5); rect(800 + (i * 180), 300, 60, 600, 5); }
+            for(let i = 0; i < 4; i++) { rect(-2300 + (i * 120), 300, 50, 50, 5); rect(-2300 + (i * 120), 800, 50, 50, 5); }
+            line(2000, 300, 2000, 900); for(let i = 0; i < 6; i++) { rect(1800, 350 + (i * 90), 80, 40); rect(2120, 350 + (i * 90), 80, 40); }
+            for(let k = 0; k < 2; k++) { let qX = -650 + (k * 800); for(let i = 0; i < 6; i++) { line(qX, -200 - (i*45), qX + 500, -200 - (i*45)); } }
+            for(let i = 0; i < 5; i++) { let xP = -600 + (i * 100); rect(xP, -600, 40, 120, 5); }
+            for(let i = 0; i < 5; i++) { let xP = 200 + (i * 100); rect(xP, -600, 40, 120, 5); }
+            for(let i = 0; i < 2; i++) { rect(950, -600 + (i*250), 500, 100, 50); }
+            rect(-600, -1450, 300, 200, 15); rect(300, -1450, 300, 200, 15);  
+            fill(0); rect(-300, -2800, 600, 30); noFill();
+            rect(-20, -4600, 40, 1200, 5); rect(1000, -2420, 1200, 40, 5); rect(-2200, -2420, 1200, 40, 5); 
+            pop();
+
+            stroke(0); strokeWeight(6 / cam.zoom); 
+            line(-1600, 400, -1600, 800); line(1600, 400, 1600, 800); line(-600, 0, 600, 0); line(1000, 0, 1400, 0);
+            line(-600, -800, 600, -800); line(-800, -2150, -800, -1850); line(800, -2150, 800, -1850);
+            line(-600, -1600, 600, -1600); line(-800, -2550, -800, -2250); line(800, -2550, 800, -2250); line(-150, -3200, 150, -3200);
+            line(-2400, -2550, -2400, -2250); line(2400, -2550, 2400, -2250); line(-150, -4800, 150, -4800); line(150, -4050, 150, -3950); 
+        }
+
+        function drawVectors(agent) {
+            push();
+            drawingContext.shadowBlur = 15;
+            drawingContext.shadowColor = agent.color;
+            stroke(agent.color);
+            strokeWeight(4); 
+            drawingContext.setLineDash([30, 20]); 
+            noFill();
+            
+            beginShape(); for(let pt of agent.path) { vertex(pt.x, pt.y); } endShape();
+            drawingContext.setLineDash([]);
+
+            for(let i = 1; i < agent.path.length; i++) {
+                let n = agent.path[i];
+                stroke(agent.color); strokeWeight(3); fill(0); circle(n.x, n.y, 20);
+                fill(agent.color); noStroke(); circle(n.x, n.y, 6);
+            }
+            drawingContext.shadowBlur = 0;
+            pop();
+        }
+
+        // DISEGNO DEI MODELLINI REALI
+        function drawAgentModel(a) {
+            push();
+            translate(a.x, a.y);
+            let target = a.path[a.pathIndex];
+            let angle = atan2(target.y - a.y, target.x - a.x);
+            rotate(angle);
+            
+            if (a.selected) {
+                drawingContext.shadowBlur = 20;
+                drawingContext.shadowColor = a.color;
+                noFill(); stroke(a.color); strokeWeight(2/cam.zoom);
+                let pulse = (sin(frameCount * 0.1) + 1) * 0.5; 
+                circle(0, 0, a.size * 2 + (pulse * 20));
+            }
+
+            if (a.id === "AMR-01") {
+                // MODELLINO ROBOT: Rettangolo industriale con radar
+                fill(0); stroke(a.color); strokeWeight(3/cam.zoom);
+                rectMode(CENTER);
+                rect(0, 0, a.size, a.size * 1.5, 5); // Corpo
+                rect(-a.size/2 - 2, 0, 4, a.size, 2); // Cingolo Sx
+                rect(a.size/2 + 2, 0, 4, a.size, 2);  // Cingolo Dx
+                // Sensore Radar frontale
+                fill(a.color); noStroke();
+                arc(0, a.size/2, a.size*2, a.size*2, -PI/4, PI/4); 
+                drawingContext.shadowBlur = 0;
+
+            } else if (a.id === "PAX-PRO") {
+                // MODELLINO BUSINESS: Chevron direzionale aerodinamico
+                fill(a.color); noStroke();
+                beginShape();
+                vertex(0, a.size); // Punta
+                vertex(a.size/1.5, -a.size/1.5); // Ala Dx
+                vertex(0, -a.size/4); // Incavo
+                vertex(-a.size/1.5, -a.size/1.5); // Ala Sx
+                endShape(CLOSE);
+                drawingContext.shadowBlur = 0;
+
+            } else if (a.id === "PAX-FAM") {
+                // MODELLINO GRUPPO: Due cerchi uniti (Adulto + Carrello/Bimbo)
+                fill(0); stroke(a.color); strokeWeight(3/cam.zoom);
+                circle(0, a.size/3, a.size); // Entità principale
+                fill(a.color);
+                circle(0, -a.size/1.5, a.size/1.8); // Entità trainata/secondaria
+                drawingContext.shadowBlur = 0;
+            }
+            
+            pop();
+        }
+
+        function mousePressed() {
+            let worldX = (mouseX - width / 2) / cam.zoom + cam.x;
+            let worldY = (mouseY - height / 2) / cam.zoom + cam.y;
+
+            // Controlla se ha cliccato su un agente
+            let clickedAgent = agents.find(a => dist(worldX, worldY, a.x, a.y) < a.size * 2);
+
+            if (clickedAgent) {
+                // Deseleziona tutti
+                agents.forEach(a => a.selected = false);
+                // Seleziona quello cliccato
+                clickedAgent.selected = true;
+                
+                cam.followingAgent = clickedAgent;
+                cam.targetZoom = 1.6; 
+                cam.isZoomed = false; 
+                return; 
+            }
+
+            // Clic a vuoto: Deseleziona tutto e ferma la camera
+            agents.forEach(a => a.selected = false);
+            cam.followingAgent = null;
+
+            if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+                cam.targetX = mapCenterX;
+                cam.targetY = mapCenterY;
+                cam.targetZoom = getFitZoom(); 
+                cam.isZoomed = false;
+            }
+        }
+
+        function windowResized() {
+            let vp = document.getElementById('viewport');
+            resizeCanvas(vp.clientWidth, vp.clientHeight);
+            if (!cam.isZoomed && !cam.followingAgent) {
+                cam.targetZoom = getFitZoom();
+                cam.zoom = cam.targetZoom; 
+            }
+        }
+    </script>
+</body>
+</html>

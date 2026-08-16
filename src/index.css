@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+
+/* ── ABC DIATYPE (SANS) ── */
+@font-face {
+  font-family: 'ABC Diatype';
+  src: url('./assets/fonts/ABC Diatype Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── ABC DIATYPE MONO (REGULAR) ── */
+@font-face {
+  font-family: 'ABC Diatype Mono';
+  src: url('./assets/fonts/ABC Diatype Mono Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── ABC DIATYPE MONO (BOLD) ── */
+@font-face {
+  font-family: 'ABC Diatype Mono';
+  src: url('./assets/fonts/ABCDiatypeMono-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --gray-color: #8a8a8a;
+  --highlight: #222222;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Forza l'uso di ABC Diatype Sans su tutta l'interfaccia */
+*, ::before, ::after {
+  font-family: 'ABC Diatype', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Forza Tailwind e tutti gli elementi a usare ABC Diatype come base */
+*, ::before, ::after {
+  font-family: 'ABC Diatype', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Forza l'uso del Mono dove esplicitamente richiesto o nei tag tecnici */
+.font-mono, code, pre, kbd, samp {
+  font-family: 'ABC Diatype Mono', monospace !important;
+}
+
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --gray-color: #8a8a8a;
+  --highlight: #222222;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'ABC Diatype', sans-serif;
+}
+
+/* Utility per forzare il mono con il corretto peso bold/regular */
+.font-mono {
+  font-family: 'ABC Diatype Mono', monospace !important;
+}
+
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --gray-color: #8a8a8a;
+  --highlight: #222222;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+}
+
+
