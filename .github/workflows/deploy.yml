@@ -4,6 +4,17 @@ on:
   push:
     branches: [ main ]
 
+# Imposta i permessi per il GITHUB_TOKEN per consentire il deployment
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Consente solo un deployment alla volta
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -11,25 +22,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 1. Installa pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
 
+      # 2. Configura Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
 
+      # 3. Installa le dipendenze
       - name: Install dependencies
         run: pnpm install
 
+      # 4. Build del progetto
       - name: Build project
         run: pnpm run build
+        env:
+          VITE_BASE_PATH: /-${{ github.event.repository.name }}/  # Imposta la base path dinamicamente
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      # 5. Upload dell'artefatto (questo passo prepara i file per GitHub Pages)
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: './dist'  # Assicurati che la build generi i file in ./dist
+
+      # 6. Deploy su GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
