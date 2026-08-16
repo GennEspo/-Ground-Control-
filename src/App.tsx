@@ -2078,7 +2078,7 @@ export default function App() {
     }
   }, [bootStage])
 
-  return (
+return (
     <div className="flex h-screen overflow-hidden bg-black text-white">
       {/* ── BARRA LATERALE A MONTAGGIO PROGRESSIVO ── */}
       <aside className="relative z-10 flex min-w-[380px] w-[380px] flex-col overflow-y-auto bg-black p-6 font-sans">
@@ -2289,7 +2289,7 @@ export default function App() {
                   <div className="mb-1 text-[var(--gray-color)] font-sans">Deploy:</div>
                   <div className="text-[0.7rem] text-white font-sans">{inspector.deploy}</div>
                 </div>
-               {inspector.battery !== undefined && (
+                {inspector.battery !== undefined && (
                   <div className="mt-2 pt-2 border-t border-[#444]">
                     <SpecRow 
                       label="Batteria" 
@@ -2417,6 +2417,7 @@ export default function App() {
       <main className={`relative min-h-0 min-w-0 flex-grow bg-black transition-opacity duration-1000 ${bootStage >= 9 ? 'opacity-100' : 'opacity-0'}`}>
         <canvas ref={canvasRef} className="block h-full w-full" />
       </main>
+      
     </div>
   )
 }
