@@ -2081,345 +2081,350 @@ export default function App() {
 return (
     <div className="flex h-screen overflow-hidden bg-black text-white">
       {/* ── BARRA LATERALE A MONTAGGIO PROGRESSIVO ── */}
-      <aside className="relative z-10 flex min-w-[380px] w-[380px] flex-col overflow-y-auto bg-black p-6 font-sans">
+      <aside className="relative z-10 flex min-w-[380px] w-[380px] flex-col h-full bg-black">
         
-        {/* HEADER: Logo ad animazione di battitura */}
-        <header className="mb-4 border-b border-white pb-3 flex items-baseline">
-          <h1 className="text-[1.1rem] font-semibold uppercase tracking-wide font-mono font-normal">
-            {bootStage === 0 ? logoText : targetLogo}
-            {bootStage === 0 && <span className="animate-pulse">_</span>}
-          </h1>
-        </header>
+        {/* Contenitore interno scrollabile con padding */}
+        <div className="flex-1 overflow-y-auto p-6 font-sans">
+          
+          {/* HEADER: Logo ad animazione di battitura */}
+          <header className="mb-4 border-b border-white pb-3 flex items-baseline">
+            <h1 className="text-[1.1rem] font-semibold uppercase tracking-wide font-mono font-normal">
+              {bootStage === 0 ? logoText : targetLogo}
+              {bootStage === 0 && <span className="animate-pulse">_</span>}
+            </h1>
+          </header>
 
-        {/* DESCRIZIONE SISTEMA IN MONO CAPS REGULAR */}
-        <div className={`mb-6 text-[0.65rem] font-mono uppercase tracking-wider text-[var(--gray-color)] leading-relaxed transition-opacity duration-500 ${bootStage >= 1 ? 'opacity-100' : 'opacity-0'}`}>
-          {bootStage === 1 ? descText : targetDesc}
-          {bootStage === 1 && <span className="animate-pulse">_</span>}
-        </div>
-
-        {/* ── 1. PANNELLO CONTROLLO FLOTTA ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider flex justify-between items-center">
-            <span>[Controllo Flotta]</span>
-            <button 
-              onClick={() => {
-                playClickSound()
-                setIsFleetPanelOpen(!isFleetPanelOpen)
-              }}
-              className="text-[0.65rem] font-mono px-1 py-0.5 text-[var(--gray-color)] hover:text-white transition-colors"
-            >
-              {isFleetPanelOpen ? '▼ CHIUDI' : '▶ LISTA AGENTI'}
-            </button>
+          {/* DESCRIZIONE SISTEMA IN MONO CAPS REGULAR */}
+          <div className={`mb-6 text-[0.65rem] font-mono uppercase tracking-wider text-[var(--gray-color)] leading-relaxed transition-opacity duration-500 ${bootStage >= 1 ? 'opacity-100' : 'opacity-0'}`}>
+            {bootStage === 1 ? descText : targetDesc}
+            {bootStage === 1 && <span className="animate-pulse">_</span>}
           </div>
 
-          <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5] space-y-3 bg-black/40">
-            <button
-              onClick={() => {
-                playClickSound()
-                simStartedRef.current = true;
-                ROSTER.filter(r => r.cls === 'A').forEach(r => agentsToStartRef.current.add(r.id));
-                forceReplan.current = true;
-              }}
-              className="w-full border border-[#444] bg-transparent py-2 font-mono text-[0.7rem] uppercase text-[var(--gray-color)] tracking-wider transition-colors hover:border-white hover:text-white"
-            >
-              Avvia / Ricalcola Flotta
-            </button>
+          {/* ── 1. PANNELLO CONTROLLO FLOTTA ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider flex justify-between items-center">
+              <span>[Controllo Flotta]</span>
+              <button 
+                onClick={() => {
+                  playClickSound()
+                  setIsFleetPanelOpen(!isFleetPanelOpen)
+                }}
+                className="text-[0.65rem] font-mono px-1 py-0.5 text-[var(--gray-color)] hover:text-white transition-colors"
+              >
+                {isFleetPanelOpen ? '▼ CHIUDI' : '▶ LISTA AGENTI'}
+              </button>
+            </div>
 
-            {isFleetPanelOpen && (
-              <div className="border-t border-dashed border-[#444] pt-3 space-y-2">
-                <div className="text-[var(--gray-color)] font-sans text-[0.6rem] mb-1">
-                  Controllo e tracking singoli agenti:
+            <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5] space-y-3 bg-black/40">
+              <button
+                onClick={() => {
+                  playClickSound()
+                  simStartedRef.current = true;
+                  ROSTER.filter(r => r.cls === 'A').forEach(r => agentsToStartRef.current.add(r.id));
+                  forceReplan.current = true;
+                }}
+                className="w-full border border-[#444] bg-transparent py-2 font-mono text-[0.7rem] uppercase text-[var(--gray-color)] tracking-wider transition-colors hover:border-white hover:text-white"
+              >
+                Avvia / Ricalcola Flotta
+              </button>
+
+              {isFleetPanelOpen && (
+                <div className="border-t border-dashed border-[#444] pt-3 space-y-2">
+                  <div className="text-[var(--gray-color)] font-sans text-[0.6rem] mb-1">
+                    Controllo e tracking singoli agenti:
+                  </div>
+
+                  <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1">
+                    {ROSTER.map((agentSpec) => (
+                      <div 
+                        key={agentSpec.id} 
+                        className="flex items-center justify-between border border-[#222] p-2 bg-black/60 hover:border-[#555] transition-colors"
+                      >
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="font-bold font-mono" style={{ color: agentSpec.color }}>
+                            {agentSpec.id} <span className="text-white font-normal">// {agentSpec.name}</span>
+                          </span>
+                          <span className="text-[0.55rem] text-[var(--gray-color)] font-sans truncate">
+                            {agentSpec.task} (Classe {agentSpec.cls})
+                          </span>
+                        </div>
+
+                        <div className="flex gap-1 ml-2 shrink-0">
+                          <button
+                            onClick={() => {
+                              playClickSound()
+                              agentToFollowRef.current = agentSpec.id;
+                              setFollowedAgentId(agentSpec.id);
+                            }}
+                            className={`px-2 py-1 border text-[0.55rem] uppercase font-mono tracking-wider transition-all ${
+                              followedAgentId === agentSpec.id
+                                ? 'border-white bg-white text-black font-bold'
+                                : 'border-[#444] text-[var(--gray-color)] bg-transparent hover:border-white hover:text-white'
+                            }`}
+                            title="Segui sulla mappa"
+                          >
+                            Segui
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              playClickSound()
+                              simStartedRef.current = true;
+                              agentsToStartRef.current.add(agentSpec.id);
+                            }}
+                            className="px-2.5 py-1 border border-[#444] text-[0.6rem] uppercase font-mono tracking-wider text-[var(--gray-color)] hover:border-white hover:text-white transition-all"
+                          >
+                            Avvia
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              )}
+            </div>
+          </div>
 
-                <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1">
-                  {ROSTER.map((agentSpec) => (
-                    <div 
-                      key={agentSpec.id} 
-                      className="flex items-center justify-between border border-[#222] p-2 bg-black/60 hover:border-[#555] transition-colors"
+          {/* ── 2. PANNELLO SEMANTICA SPAZIALE ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase flex justify-between items-center font-mono tracking-wider">
+              <span>[Semantica Spaziale]</span>
+              <button 
+                onClick={() => {
+                  playClickSound()
+                  grammarOnRef.current = !grammarOnRef.current;
+                  setGrammarOn(grammarOnRef.current);
+                }}
+                className={`px-3 py-0.5 border text-[0.65rem] font-bold transition-all font-mono ${
+                  grammarOn 
+                    ? 'border-white bg-white text-black' 
+                    : 'border-[#444] text-[var(--gray-color)] bg-transparent hover:border-white hover:text-white'
+                }`}
+              >
+                {grammarOn ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5] text-[#ccc]">
+              <div className="mb-2 font-sans">Prova empirica: confronta il comportamento geometrico puro (caos) con il layer relazionale attivato (ordine).</div>
+              <div className="flex justify-between mt-2 pt-2 border-t border-[#444]">
+                <span className="text-[var(--gray-color)] font-sans">Costmap Aderenza (L.1)</span>
+                <span className={grammarOn ? 'text-[#00E0C0] font-bold font-mono' : 'font-mono'}>
+                  {laneUsage !== null ? `${laneUsage}%` : '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── 3. PANNELLO STANZA ATTIVA ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
+              [Stanza Attiva]
+            </div>
+            <div className="mb-3 rounded border border-[#444] bg-black/40 p-2 font-mono text-[0.7rem] text-white">
+              <div className="font-semibold">{activeRoom ?? 'Nessuna zona in focus'}</div>
+            </div>
+          </div>
+
+          {/* ── 4. PANNELLO SCHEDA PROTAGONISTA ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 5 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
+              [Scheda Protagonista]
+            </div>
+            <div className="relative h-auto border border-white p-4 font-mono text-[0.75rem]">
+              {inspector ? (
+                <>
+                  <div className="mb-3 border-b border-white pb-2">
+                    <div
+                      className="text-[0.9rem] font-bold font-mono"
+                      style={{ color: inspector.color, textShadow: `0 0 8px ${inspector.color}88` }}
                     >
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="font-bold font-mono" style={{ color: agentSpec.color }}>
-                          {agentSpec.id} <span className="text-white font-normal">// {agentSpec.name}</span>
-                        </span>
-                        <span className="text-[0.55rem] text-[var(--gray-color)] font-sans truncate">
-                          {agentSpec.task} (Classe {agentSpec.cls})
-                        </span>
-                      </div>
-
-                      <div className="flex gap-1 ml-2 shrink-0">
-                        <button
-                          onClick={() => {
-                            playClickSound()
-                            agentToFollowRef.current = agentSpec.id;
-                            setFollowedAgentId(agentSpec.id);
-                          }}
-                          className={`px-2 py-1 border text-[0.55rem] uppercase font-mono tracking-wider transition-all ${
-                            followedAgentId === agentSpec.id
-                              ? 'border-white bg-white text-black font-bold'
-                              : 'border-[#444] text-[var(--gray-color)] bg-transparent hover:border-white hover:text-white'
-                          }`}
-                          title="Segui sulla mappa"
-                        >
-                          Segui
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            playClickSound()
-                            simStartedRef.current = true;
-                            agentsToStartRef.current.add(agentSpec.id);
-                          }}
-                          className="px-2.5 py-1 border border-[#444] text-[0.6rem] uppercase font-mono tracking-wider text-[var(--gray-color)] hover:border-white hover:text-white transition-all"
-                        >
-                          Avvia
-                        </button>
-                      </div>
+                      {inspector.id} // {inspector.name}
                     </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.6rem] uppercase font-sans">
+                      <span
+                        className="border px-1 py-[1px] font-mono"
+                        style={{ borderColor: inspector.color, color: inspector.color }}
+                      >
+                        Classe {inspector.cls}
+                      </span>
+                      <span className="text-[var(--gray-color)]">
+                        {inspector.governable ? 'Governabile' : 'Sola lettura'}
+                      </span>
+                      <span
+                        className="ml-auto border px-1 py-[1px] font-mono"
+                        style={{
+                          borderColor: inspector.active ? inspector.color : '#555',
+                          color: inspector.active ? inspector.color : '#777',
+                        }}
+                      >
+                        {inspector.status}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-[0.7rem] text-white font-sans">{inspector.task}</div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <SpecRow label="Coord" value={`X: ${inspector.x}  Y: ${inspector.y}`} />
+                    {inspector.active && (
+                      <SpecRow label="Residuo a B" value={`${inspector.remaining} u.`} />
+                    )}
+                    <SpecRow label="Altezza" value={inspector.height} />
+                    <SpecRow label="Impronta" value={inspector.footprint} />
+                    <SpecRow label="Peso" value={inspector.weight} />
+                    <SpecRow label="Velocità" value={inspector.speed} />
+                  </div>
+
+                  <div className="mt-3 border-t border-dotted border-[#444] pt-2">
+                    <div className="mb-1 text-[var(--gray-color)] font-sans">Sensori:</div>
+                    <div className="text-[0.7rem] text-white font-sans">{inspector.sensors}</div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="mb-1 text-[var(--gray-color)] font-sans">Navigazione:</div>
+                    <div className="text-[0.7rem] text-white font-sans">{inspector.nav}</div>
+                  </div>
+                  <div className="mt-2 flex items-baseline justify-between gap-2">
+                    <span className="text-[var(--gray-color)] font-sans">Legge:</span>
+                    <span className="text-right text-[0.7rem] font-mono" style={{ color: inspector.color }}>
+                      {inspector.reads}
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="mb-1 text-[var(--gray-color)] font-sans">Deploy:</div>
+                    <div className="text-[0.7rem] text-white font-sans">{inspector.deploy}</div>
+                  </div>
+                  {inspector.battery !== undefined && (
+                    <div className="mt-2 pt-2 border-t border-[#444]">
+                      <SpecRow 
+                        label="Batteria" 
+                        value={inspector.cls === 'B' ? 'N.D. (Gestione Utente)' : `${Math.round(inspector.battery)}%`} 
+                      />
+                      {inspector.cls !== 'B' && (
+                        <div className="w-full h-1 bg-[#333] mt-1">
+                          <div 
+                            className="h-full transition-all duration-300" 
+                            style={{ 
+                              width: `${inspector.battery}%`, 
+                              backgroundColor: inspector.battery < 20 ? '#ff4444' : '#00E0C0' 
+                            }} 
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mt-[50px] text-center text-[var(--gray-color)] font-sans">
+                  &gt; Seleziona un protagonista sulla mappa per caricare la sua scheda giocatore.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── 5. PANNELLO SCALA E TEMPO ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 6 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
+              [Scala e Tempo]
+            </div>
+            <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5]">
+              <div className="flex justify-between">
+                <span className="text-[var(--gray-color)] font-sans">Scala:</span>
+                <span>1 unità = 1 m</span>
+              </div>
+              <div className="mt-1 flex justify-between">
+                <span className="text-[var(--gray-color)] font-sans">Pianta:</span>
+                <span>700 × 610 m</span>
+              </div>
+              <div className="mt-2 flex gap-1 border-t border-dotted border-[#444] pt-2">
+                {TIME_SCALES.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      playClickSound()
+                      setTimeScale(t)
+                    }}
+                    className={`flex-1 border px-1 py-1 font-mono text-[0.65rem] transition-colors ${
+                      timeScale === t
+                        ? 'border-white bg-white text-black'
+                        : 'border-[#444] text-[var(--gray-color)] hover:border-white hover:text-white'
+                    }`}
+                  >
+                    ×{t}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 text-[var(--gray-color)] font-sans">
+                Le andature sono quelle di scheda. ×1 è il tempo reale: attraversare il
+                terminale richiede qualche minuto, come nella realtà.
+              </div>
+            </div>
+          </div>
+
+          {/* ── 6. PANNELLO MISSIONE ATTIVA ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 7 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
+              [Missione Attiva]
+            </div>
+            <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5]">
+              {MISSIONS.map((m, idx) => (
+                <div key={m.id} className={idx > 0 ? "mt-2 border-t border-dotted border-[#444] pt-2" : ""}>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--gray-color)] font-sans">Agente:</span>
+                    <span className="font-mono">{m.id}</span>
+                  </div>
+                  <div className="mt-1 flex justify-between gap-2">
+                    <span className="text-[var(--gray-color)] font-sans">Tratta:</span>
+                    <span className="text-right font-sans">{m.label}</span>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-2 border-t border-dotted border-[#444] pt-2 text-[var(--gray-color)] font-sans">
+                Tutti gli altri {ROSTER.length - MISSIONS.length} agenti sono attivi in modalità autonoma.
+              </div>
+            </div>
+          </div>
+
+          {/* ── 7. PANNELLO TELEMETRIA + PULSANTE AUDIO FINALE ── */}
+          <div className={`transition-all duration-500 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
+              [Telemetria]
+            </div>
+            <div className="space-y-3">
+              <div className="border border-[#333] bg-[var(--highlight)] p-3 font-mono text-[0.65rem] leading-[1.4] text-[#ccc]">
+                <div className="h-[150px] overflow-y-auto">
+                  {log.map((line, i) => (
+                    <div key={i}>&gt; {line}</div>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* ── 2. PANNELLO SEMANTICA SPAZIALE ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase flex justify-between items-center font-mono tracking-wider">
-            <span>[Semantica Spaziale]</span>
-            <button 
-              onClick={() => {
-                playClickSound()
-                grammarOnRef.current = !grammarOnRef.current;
-                setGrammarOn(grammarOnRef.current);
-              }}
-              className={`px-3 py-0.5 border text-[0.65rem] font-bold transition-all font-mono ${
-                grammarOn 
-                  ? 'border-white bg-white text-black' 
-                  : 'border-[#444] text-[var(--gray-color)] bg-transparent hover:border-white hover:text-white'
-              }`}
-            >
-              {grammarOn ? 'ON' : 'OFF'}
-            </button>
-          </div>
-          <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5] text-[#ccc]">
-            <div className="mb-2 font-sans">Prova empirica: confronta il comportamento geometrico puro (caos) con il layer relazionale attivato (ordine).</div>
-            <div className="flex justify-between mt-2 pt-2 border-t border-[#444]">
-              <span className="text-[var(--gray-color)] font-sans">Costmap Aderenza (L.1)</span>
-              <span className={grammarOn ? 'text-[#00E0C0] font-bold font-mono' : 'font-mono'}>
-                {laneUsage !== null ? `${laneUsage}%` : '—'}
-              </span>
+              {/* Pulsante Sound appare alla fine della sidebar nel boot progressivo */}
+              <button
+                onClick={() => {
+                  playClickSound()
+                  setIsMuted(!isMuted)
+                }}
+                className="w-full border border-[#444] py-2 font-mono text-[0.65rem] uppercase text-[var(--gray-color)] hover:border-white hover:text-white transition-colors"
+              >
+                {isMuted ? 'Audio: OFF' : 'Audio: ON'}
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* ── 3. PANNELLO STANZA ATTIVA ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
-            [Stanza Attiva]
-          </div>
-          <div className="mb-3 rounded border border-[#444] bg-black/40 p-2 font-mono text-[0.7rem] text-white">
-            <div className="font-semibold">{activeRoom ?? 'Nessuna zona in focus'}</div>
-          </div>
-        </div>
-
-        {/* ── 4. PANNELLO SCHEDA PROTAGONISTA ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 5 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
-            [Scheda Protagonista]
-          </div>
-          <div className="relative h-auto border border-white p-4 font-mono text-[0.75rem]">
-            {inspector ? (
-              <>
-                <div className="mb-3 border-b border-white pb-2">
-                  <div
-                    className="text-[0.9rem] font-bold font-mono"
-                    style={{ color: inspector.color, textShadow: `0 0 8px ${inspector.color}88` }}
-                  >
-                    {inspector.id} // {inspector.name}
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.6rem] uppercase font-sans">
-                    <span
-                      className="border px-1 py-[1px] font-mono"
-                      style={{ borderColor: inspector.color, color: inspector.color }}
-                    >
-                      Classe {inspector.cls}
-                    </span>
-                    <span className="text-[var(--gray-color)]">
-                      {inspector.governable ? 'Governabile' : 'Sola lettura'}
-                    </span>
-                    <span
-                      className="ml-auto border px-1 py-[1px] font-mono"
-                      style={{
-                        borderColor: inspector.active ? inspector.color : '#555',
-                        color: inspector.active ? inspector.color : '#777',
-                      }}
-                    >
-                      {inspector.status}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-[0.7rem] text-white font-sans">{inspector.task}</div>
-                </div>
-
-                <div className="space-y-1">
-                  <SpecRow label="Coord" value={`X: ${inspector.x}  Y: ${inspector.y}`} />
-                  {inspector.active && (
-                    <SpecRow label="Residuo a B" value={`${inspector.remaining} u.`} />
-                  )}
-                  <SpecRow label="Altezza" value={inspector.height} />
-                  <SpecRow label="Impronta" value={inspector.footprint} />
-                  <SpecRow label="Peso" value={inspector.weight} />
-                  <SpecRow label="Velocità" value={inspector.speed} />
-                </div>
-
-                <div className="mt-3 border-t border-dotted border-[#444] pt-2">
-                  <div className="mb-1 text-[var(--gray-color)] font-sans">Sensori:</div>
-                  <div className="text-[0.7rem] text-white font-sans">{inspector.sensors}</div>
-                </div>
-                <div className="mt-2">
-                  <div className="mb-1 text-[var(--gray-color)] font-sans">Navigazione:</div>
-                  <div className="text-[0.7rem] text-white font-sans">{inspector.nav}</div>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="text-[var(--gray-color)] font-sans">Legge:</span>
-                  <span className="text-right text-[0.7rem] font-mono" style={{ color: inspector.color }}>
-                    {inspector.reads}
-                  </span>
-                </div>
-                <div className="mt-2">
-                  <div className="mb-1 text-[var(--gray-color)] font-sans">Deploy:</div>
-                  <div className="text-[0.7rem] text-white font-sans">{inspector.deploy}</div>
-                </div>
-                {inspector.battery !== undefined && (
-                  <div className="mt-2 pt-2 border-t border-[#444]">
-                    <SpecRow 
-                      label="Batteria" 
-                      value={inspector.cls === 'B' ? 'N.D. (Gestione Utente)' : `${Math.round(inspector.battery)}%`} 
-                    />
-                    {inspector.cls !== 'B' && (
-                      <div className="w-full h-1 bg-[#333] mt-1">
-                        <div 
-                          className="h-full transition-all duration-300" 
-                          style={{ 
-                            width: `${inspector.battery}%`, 
-                            backgroundColor: inspector.battery < 20 ? '#ff4444' : '#00E0C0' 
-                          }} 
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="mt-[50px] text-center text-[var(--gray-color)] font-sans">
-                &gt; Seleziona un protagonista sulla mappa per caricare la sua scheda giocatore.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── 5. PANNELLO SCALA E TEMPO ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 6 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
-            [Scala e Tempo]
-          </div>
-          <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5]">
-            <div className="flex justify-between">
-              <span className="text-[var(--gray-color)] font-sans">Scala:</span>
-              <span>1 unità = 1 m</span>
-            </div>
-            <div className="mt-1 flex justify-between">
-              <span className="text-[var(--gray-color)] font-sans">Pianta:</span>
-              <span>700 × 610 m</span>
-            </div>
-            <div className="mt-2 flex gap-1 border-t border-dotted border-[#444] pt-2">
-              {TIME_SCALES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => {
-                    playClickSound()
-                    setTimeScale(t)
-                  }}
-                  className={`flex-1 border px-1 py-1 font-mono text-[0.65rem] transition-colors ${
-                    timeScale === t
-                      ? 'border-white bg-white text-black'
-                      : 'border-[#444] text-[var(--gray-color)] hover:border-white hover:text-white'
-                  }`}
-                >
-                  ×{t}
-                </button>
-              ))}
-            </div>
-            <div className="mt-2 text-[var(--gray-color)] font-sans">
-              Le andature sono quelle di scheda. ×1 è il tempo reale: attraversare il
-              terminale richiede qualche minuto, come nella realtà.
+          {/* ── 8. COLOPHON & CREDITI (CONFORME LINEE GUIDA SUPSI - PROGETTO) ── */}
+          <div className={`transition-all duration-500 mt-4 border-t border-dashed border-[#444] pt-3 font-mono text-[0.6rem] leading-relaxed text-[var(--gray-color)] space-y-1 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <div className="text-white font-bold tracking-wider">[GROUND CONTROL]</div>
+            <div>Progetto di tesi di Bachelor in Comunicazione visiva</div>
+            <div>SUPSI · Dipartimento ambiente costruzioni e design</div>
+            <div className="text-white pt-1">
+              © 2026 Gennaro Esposito. Tutti i diritti riservati.
             </div>
           </div>
+
         </div>
 
-        {/* ── 6. PANNELLO MISSIONE ATTIVA ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 7 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
-            [Missione Attiva]
-          </div>
-          <div className="border border-[#333] p-3 font-mono text-[0.65rem] leading-[1.5]">
-            {MISSIONS.map((m, idx) => (
-              <div key={m.id} className={idx > 0 ? "mt-2 border-t border-dotted border-[#444] pt-2" : ""}>
-                <div className="flex justify-between">
-                  <span className="text-[var(--gray-color)] font-sans">Agente:</span>
-                  <span className="font-mono">{m.id}</span>
-                </div>
-                <div className="mt-1 flex justify-between gap-2">
-                  <span className="text-[var(--gray-color)] font-sans">Tratta:</span>
-                  <span className="text-right font-sans">{m.label}</span>
-                </div>
-              </div>
-            ))}
-            <div className="mt-2 border-t border-dotted border-[#444] pt-2 text-[var(--gray-color)] font-sans">
-              Tutti gli altri {ROSTER.length - MISSIONS.length} agenti sono attivi in modalità autonoma.
-            </div>
-          </div>
-        </div>
-
-        {/* ── 7. PANNELLO TELEMETRIA + PULSANTE AUDIO FINALE ── */}
-        <div className={`transition-all duration-500 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="mb-3 mt-6 border-b border-dashed border-[var(--gray-color)] pb-1 text-[0.75rem] font-normal uppercase font-mono tracking-wider">
-            [Telemetria]
-          </div>
-          <div className="space-y-3">
-            <div className="border border-[#333] bg-[var(--highlight)] p-3 font-mono text-[0.65rem] leading-[1.4] text-[#ccc]">
-              <div className="h-[150px] overflow-y-auto">
-                {log.map((line, i) => (
-                  <div key={i}>&gt; {line}</div>
-                ))}
-              </div>
-            </div>
-
-            {/* Pulsante Sound appare alla fine della sidebar nel boot progressivo */}
-            <button
-              onClick={() => {
-                playClickSound()
-                setIsMuted(!isMuted)
-              }}
-              className="w-full border border-[#444] py-2 font-mono text-[0.65rem] uppercase text-[var(--gray-color)] hover:border-white hover:text-white transition-colors"
-            >
-              {isMuted ? 'Audio: OFF' : 'Audio: ON'}
-            </button>
-          </div>
-        </div>
-
-        {/* ── 8. COLOPHON & CREDITI (CONFORME LINEE GUIDA SUPSI - PROGETTO) ── */}
-        <div className={`transition-all duration-500 mt-4 border-t border-dashed border-[#444] pt-3 font-mono text-[0.6rem] leading-relaxed text-[var(--gray-color)] space-y-1 ${bootStage >= 8 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <div className="text-white font-bold tracking-wider">[GROUND CONTROL]</div>
-          <div>Progetto di tesi di Bachelor in Comunicazione visiva</div>
-          <div>SUPSI · Dipartimento ambiente costruzioni e design</div>
-          <div className="text-white pt-1">
-            © 2026 Gennaro Esposito. Tutti i diritti riservati.
-          </div>
-        </div>
-
-        {/* ── LINEA VERTICALE DI SEPARAZIONE ── */}
+        {/* ── LINEA VERTICALE DI SEPARAZIONE FISSA (Ancorata all'aside, non scorre via) ── */}
         <div 
-          className="absolute right-0 top-0 w-[1px] bg-white transition-all duration-300 ease-out"
+          className="absolute right-0 top-0 w-[1px] bg-white transition-all duration-300 ease-out pointer-events-none"
           style={{ height: `${Math.min(100, (bootStage / 9) * 100)}%` }}
         />
 
